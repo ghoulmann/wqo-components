@@ -277,7 +277,7 @@ const afterDOMLoaded = `
       var basePath = (document.body.getAttribute('data-basepath') || '').replace(/\\/+$/, '');
       cy.on('tap', 'node', function(evt) {
         var id = evt.target.id();
-        if (id !== data.id) window.location = basePath + '/lexicon/' + id;
+        if (id !== data.id) window.location = basePath + '/lexicon/' + (data.subfolder || '') + id;
       });
       el._wqoCy = cy;
     });
@@ -314,6 +314,11 @@ const WqoConceptView: QuartzComponentConstructor = () => {
 
     const slug = (fileData.slug ?? "") as string
     const root = pathToRoot(slug)
+    const slugParts = slug.split("/")
+    const lexiconIdx = slugParts.indexOf("lexicon")
+    const subfolder = lexiconIdx >= 0 && slugParts.length > lexiconIdx + 2
+      ? slugParts[lexiconIdx + 1] + "/"
+      : ""
 
     // WordNet block
     const wn = fm.wordnet
@@ -370,7 +375,7 @@ const WqoConceptView: QuartzComponentConstructor = () => {
                 <div class="wqo-rel-type">{REL_LABELS[relType] ?? labelify(relType)}</div>
                 <div class="wqo-rel-links">
                   {links.map((t, i) => (
-                    <a key={i} href={`${root}/lexicon/${t}`}>
+                    <a key={i} href={`${root}/lexicon/${subfolder}${t}`}>
                       {labelify(t)}
                     </a>
                   ))}
@@ -385,7 +390,7 @@ const WqoConceptView: QuartzComponentConstructor = () => {
     const conceptId = slug.split("/").pop() ?? slug
     const graphData =
       rels && Object.keys(rels).length > 0
-        ? JSON.stringify({ id: conceptId, name: fm.title ?? conceptId, rels })
+        ? JSON.stringify({ id: conceptId, name: fm.title ?? conceptId, rels, subfolder })
         : null
 
     const graphSection = graphData ? (
